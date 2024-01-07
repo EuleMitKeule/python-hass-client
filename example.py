@@ -16,9 +16,13 @@ LOGGER = logging.getLogger()
 
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
-    parser = argparse.ArgumentParser(description="Home Assistant simple client for Python")
+    parser = argparse.ArgumentParser(
+        description="Home Assistant simple client for Python"
+    )
     parser.add_argument("--debug", action="store_true", help="Log with debug level")
-    parser.add_argument("url", type=str, help="URL of server, ie http://homeassistant:8123")
+    parser.add_argument(
+        "url", type=str, help="URL of server, ie http://homeassistant:8123"
+    )
     parser.add_argument("token", type=str, help="Long Lived Token")
     arguments = parser.parse_args()
     return arguments
@@ -38,7 +42,11 @@ async def connect(args: argparse.Namespace, session: ClientSession) -> None:
     """Connect to the server."""
     websocket_url = args.url.replace("http", "ws") + "/api/websocket"
     async with HomeAssistantClient(websocket_url, args.token, session) as client:
-        await client.subscribe_events(log_events)
+        states = await client.get_states()
+
+        print(states)
+
+        # await client.subscribe_events(log_events)
         await asyncio.sleep(360)
 
 
