@@ -119,9 +119,10 @@ class HomeAssistantClient:
 
         def handle_message(message: Message):
             if asyncio.iscoroutinefunction(cb_func):
-                self._loop.create_task(cb_func(message["event"]))
+                event = Event(**message["event"])
+                self._loop.create_task(cb_func(event))
             else:
-                self._loop.call_soon(cb_func, message["event"])
+                self._loop.call_soon(cb_func, event)
 
         return await self.subscribe(
             handle_message, "subscribe_events", event_type=event_type
