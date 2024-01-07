@@ -29,6 +29,7 @@ from .exceptions import (
     FailedCommand,
     InvalidMessage,
     NotConnected,
+    NotFoundError,
 )
 from .models import (
     Area,
@@ -178,10 +179,15 @@ class HomeAssistantClient:
             "call_service", domain=domain, service=service, **data
         )
 
-    async def get_state(self, entity_id: str) -> State | None:
+    async def get_state(self, entity_id: str) -> State:
         """Get state of entity."""
         states = await self.get_states()
-        return states.get(entity_id)
+        state = states.get(entity_id)
+
+        if state is None:
+            raise NotFoundError(f"Entity not found: {entity_id}")
+
+        return state
 
     async def get_states(self) -> dict[str, State]:
         """Get dump of the current states within Home Assistant."""
