@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, Final, NotRequired, TypedDict
 
 MESSAGE_TYPE_AUTH: Final[str] = "auth"
 MESSAGE_TYPE_AUTH_REQUIRED: Final[str] = "auth"
 
 
-class AuthRequiredMessage(TypedDict):
+@dataclass
+class AuthRequiredMessage:
     """
     Message received in the auth phase (first message from server after connect).
 
@@ -19,7 +21,8 @@ class AuthRequiredMessage(TypedDict):
     ha_version: str  # 2021.5.3
 
 
-class AuthCommandMessage(TypedDict):
+@dataclass
+class AuthCommandMessage:
     """
     Message sent in the auth phase (first message from client to server).
 
@@ -30,7 +33,8 @@ class AuthCommandMessage(TypedDict):
     access_token: str
 
 
-class AuthResultMessage(TypedDict):
+@dataclass
+class AuthResultMessage:
     """
     Message received as result on the auth command.
 
@@ -38,11 +42,12 @@ class AuthResultMessage(TypedDict):
     """
 
     type: str  # auth_ok or auth_invalid
-    ha_version: NotRequired[str]
-    message: NotRequired[str]  # in case of error
+    ha_version: str | None
+    message: str | None  # in case of error
 
 
-class Message(TypedDict):
+@dataclass
+class Message:
     """
     Base Message format for exchanging messages with the server.
 
@@ -61,7 +66,8 @@ class CommandMessage(Message):
     """
 
 
-class Context(TypedDict):
+@dataclass
+class Context:
     """Context received in an event or result message."""
 
     id: str
@@ -83,7 +89,8 @@ class CommandResultMessage(Message):
     result: CommandResultData
 
 
-class Event(TypedDict):
+@dataclass
+class Event:
     """
     Event object received in Event message.
 
@@ -97,7 +104,8 @@ class Event(TypedDict):
     data: dict[str, Any]
 
 
-class Area(TypedDict):
+@dataclass
+class Area:
     """Representation of a Home Assistant Area object within the AreaRegistry."""
 
     aliases: list[str]
@@ -106,7 +114,8 @@ class Area(TypedDict):
     picture: str | None
 
 
-class Device(TypedDict):
+@dataclass
+class Device:
     """Representation of a Home Assistant Device object within the DeviceRegistry."""
 
     area_id: str | None
@@ -126,7 +135,8 @@ class Device(TypedDict):
     via_device_id: str | None
 
 
-class Entity(TypedDict):
+@dataclass
+class Entity:
     """Representation of a Home Assistant Entity object within the EntityRegistry."""
 
     area_id: str | None
@@ -145,20 +155,22 @@ class Entity(TypedDict):
     platform: str
     translation_key: str | None
     unique_id: str
-    aliases: NotRequired[list[str]]
-    capabilities: NotRequired[dict[str, Any]]
-    device_class: NotRequired[str | None]
-    original_device_class: NotRequired[str | None]
-    original_icon: NotRequired[str | None]
+    aliases: list[str] | None
+    capabilities: dict[str, Any] | None
+    device_class: str | None
+    original_device_class: str | None
+    original_icon: str | None
 
 
-class CallServiceResult(TypedDict):
+@dataclass
+class CallServiceResult:
     """Representation of the result received when calling a service."""
 
     context: Context
 
 
-class State(TypedDict):
+@dataclass
+class State:
     """Representation of an (entity) State object as received from the api."""
 
     entity_id: str
@@ -169,7 +181,8 @@ class State(TypedDict):
     context: Context
 
 
-class UnitSystemDetails(TypedDict):
+@dataclass
+class UnitSystemDetails:
     """Representation of the Unit system details object as received from the api."""
 
     length: str  # e.g. km
@@ -181,7 +194,8 @@ class UnitSystemDetails(TypedDict):
     wind_speed: str  # e.g. L
 
 
-class Config(TypedDict):
+@dataclass
+class Config:
     """Representation of the Hass Config object as received from the api."""
 
     latitude: float
@@ -206,14 +220,15 @@ class Config(TypedDict):
     language: str
 
 
-class CompressedState(TypedDict):
+@dataclass
+class CompressedState:
     """Representation of the compacted State differences object as received from the api."""
 
-    c: NotRequired[str | Context]  # context (id only or full Context obj)
-    s: NotRequired[str]  # state
-    a: NotRequired[dict[str, Any]]  # state attributes
-    lc: NotRequired[float]  # last_changed as timestamp
-    lu: NotRequired[float]  # last_updated as timestamp (if differs from last changed)
+    c: str | Context | None  # context (id only or full Context obj)
+    s: str | None  # state
+    a: dict[str, Any] | None  # state attributes
+    lc: float | None  # last_changed as timestamp
+    lu: float | None  # last_updated as timestamp (if differs from last changed)
 
 
 StateDiff = TypedDict(
@@ -227,7 +242,8 @@ StateDiff = TypedDict(
 )
 
 
-class EntityStateEvent(TypedDict):
+@dataclass
+class EntityStateEvent:
     """Compact Entity State(event) object received in Event message."""
 
     # ruff: noqa: E501 pylint: disable=line-too-long
@@ -235,9 +251,9 @@ class EntityStateEvent(TypedDict):
     # {"c":{"light.test":{"+":{"lu":1683838800.736819,"c":"01H069T4V03S8D116YDW0GP2WC","a":{"brightness":89}}}}}}
 
     # NOTE: dict key = entity_id
-    a: NotRequired[dict[str, CompressedState]]  # entity added (or first message)
-    c: NotRequired[dict[str, StateDiff]]  # entity changed
-    r: NotRequired[list[str]]  # entity removed (list of removed entity_ids)
+    a: dict[str, CompressedState] | None  # entity added (or first message)
+    c: dict[str, StateDiff] | None  # entity changed
+    r: list[str] | None  # entity removed (list of removed entity_ids)
 
 
 class EntityStateMessage(Message):
