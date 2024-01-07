@@ -165,12 +165,12 @@ class HomeAssistantClient:
         """
         if not self.connected:
             raise NotConnected("Please call connect first.")
-        msg = {"type": "call_service", "domain": domain, "service": service}
+        data = {}
         if service_data:
-            msg["service_data"] = service_data
+            data["service_data"] = service_data
         if target:
-            msg["target"] = target
-        return await self.send_command(msg)
+            data["target"] = target
+        return await self.send_command("call_service", domain=domain, service=service, **data)
 
     async def get_states(self) -> list[State]:
         """Get dump of the current states within Home Assistant."""
