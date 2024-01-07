@@ -178,7 +178,12 @@ class HomeAssistantClient:
             "call_service", domain=domain, service=service, **data
         )
 
-    async def get_states(self) -> list[State]:
+    async def get_state(self, entity_id: str) -> State | None:
+        """Get state of entity."""
+        states = await self.get_states()
+        return states.get(entity_id)
+
+    async def get_states(self) -> dict[str, State]:
         """Get dump of the current states within Home Assistant."""
         states_list = await self.send_command("get_states")
         states_dict = {state["entity_id"]: State(**state) for state in states_list}
