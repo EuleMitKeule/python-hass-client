@@ -9,6 +9,7 @@ from contextlib import suppress
 from aiohttp import ClientSession
 
 from hass_client import HomeAssistantClient
+from hass_client.exceptions import NotFoundError
 from hass_client.models import Event
 
 LOGGER = logging.getLogger()
@@ -38,22 +39,56 @@ async def start_cli() -> None:
         await connect(args, session)
 
 
+class SomeError(Exception):
+    pass
+
+
+def handle_some_error():
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            try:
+                return await func(*args, **kwargs)
+            except SomeError as e:
+                LOGGER.error("Some error: %s", e)
+            except NotFoundError as e:
+                LOGGER.error("Not found error: %s", e)
+
+        return wrapper
+
+    return decorator
+
+
+@handle_some_error()
+async def tick() -> None:
+    LOGGER.info("Tick")
+    await asyncio.sleep(1)
+    raise SomeError("Some error")
+
+
 async def connect(args: argparse.Namespace, session: ClientSession) -> None:
     """Connect to the server."""
     websocket_url = args.url.replace("http", "ws") + "/api/websocket"
     async with HomeAssistantClient(websocket_url, args.token, session) as client:
-        states = await client.get_states()
+        await client.subscribe_events(log_events)
 
-        print(states)
+        @handle_some_error()
+        async def throw_error(event: Event) -> None:
+            await client.get_state("aoingbfoidng")
 
-        # await client.subscribe_events(log_events)
-        await asyncio.sleep(360)
+        await client.subscribe_events(throw_error)
+
+        while True:
+            await tick()
 
 
-def log_events(event: Event) -> None:
+@handle_some_error()
+async def log_events(event: Event) -> None:
     """Log node value changes."""
-    LOGGER.info("Received event: %s", event["event_type"])
-    LOGGER.debug(event)
+    if event.event_type != "state_changed":
+        return
+    if event.data["new_state"]["entity_id"] == "input_boolean.buro_licht_auto":
+        LOGGER.info("Received event: %s", event.event_type)
+        raise SomeError("Some error")
 
 
 def main() -> None:

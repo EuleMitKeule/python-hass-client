@@ -178,6 +178,7 @@ class State:
     attributes: dict[str, Any]
     last_changed: str
     last_updated: str
+    last_reported: str
     context: Context
 
 

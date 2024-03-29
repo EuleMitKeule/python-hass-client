@@ -5,7 +5,9 @@ Simple wrapper for the Websocket API
 provided by Home Assistant that allows for rapid development of apps
 connected to Home Assistant.
 """
+
 import asyncio
+import json
 import logging
 import os
 import pprint
@@ -46,15 +48,6 @@ from .models import (
     Message,
     State,
 )
-
-try:
-    import orjson as json
-
-    HAS_ORJSON = True
-except ImportError:
-    import json
-
-    HAS_ORJSON = False
 
 LOGGER = logging.getLogger(__package__)
 
@@ -274,9 +267,9 @@ class HomeAssistantClient:
                 return
             self._subscriptions.pop(key)
             # try to unsubscribe
-            if "subscribe" not in message_base["type"]:
+            if "subscribe" not in message_base["command"]:
                 return
-            unsub_command = message_base["type"].replace("subscribe", "unsubscribe")
+            unsub_command = message_base["command"].replace("subscribe", "unsubscribe")
             asyncio.create_task(
                 self.send_command_no_wait(unsub_command, subscription=key)
             )
@@ -411,10 +404,7 @@ class HomeAssistantClient:
         assert self._client
         assert "id" in message
 
-        if HAS_ORJSON:
-            await self._client.send_str(json.dumps(message).decode())
-        else:
-            await self._client.send_json(message)
+        await self._client.send_json(message)
 
     async def __aenter__(self) -> "HomeAssistantClient":
         """Connect to the websocket."""
